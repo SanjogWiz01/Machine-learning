@@ -13,7 +13,7 @@ model = LinearRegression()
 model.fit(X, y)
 
 # Predict new value
-hours = 6 #
+hours = 6 #t t
 prediction = model.predict([[hours]])
 
 print("Trained Linear Regression Model")
