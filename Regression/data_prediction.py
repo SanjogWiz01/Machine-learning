@@ -18,3 +18,4 @@ predicted_price = model.predict([[size]])
 
 print("Linear Regression Model Trained!")
 print("For house size", size, "sq ft, predicted price =", predicted_price[0])
+# predict the value of house
