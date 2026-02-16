@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Colorful Snake Game</title>
+<style>
+  body {
+    margin: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    background: #4B3A36; /* Brownish color */
+    background-image: linear-gradient(90deg, #ffffe0 5%, transparent 5%, transparent 95%, #ffffe0 95%, #ffffe0),
+                      linear-gradient(0deg, #ffffe0 5%, transparent 5%, transparent 95%, #ffffe0 95%, #ffffe0);
+    background-size: 50px 50px;
+  }
+  canvas {
+    border: 5px solid;
+    border-image: linear-gradient(to bottom, rgba(0, 0, 0, 1), rgba(0, 0, 0, 0)) 1;
+    position: absolute;
+  }
+  #score {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    color: #94dd92;
+    font-family: Arial, sans-serif;
+    font-size: 24px;
+  }
+  #highScore {
+    position: absolute;
+    top: 40px;
+    left: 10px;
+    color: #a2a347;
+    font-family: Arial, sans-serif;
+    font-size: 24px;
+  }
+  #difficulty {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    color: #ec2d6d;
+    font-family: Arial, sans-serif;
+    font-size: 24px;
+  }
+</style>
+</head>
+<body>
+<div id="score">Score: 0</div>
+<div id="highScore">High Score: 0</div>
+<div id="difficulty">
+  Difficulty:
+  <select id="difficultySelect">
+    <option value="easy">Easy</option>
+    <option value="medium">Medium</option>
+    <option value="hard">Hard</option>
+  </select>
+</div>
+<canvas id="gameCanvas" width="600" height="600"></canvas>
+<canvas id="overlayCanvas" width="600" height="600"></canvas>
+
+<script>
+  const canvas = document.getElementById('gameCanvas');
+  const ctx = canvas.getContext('2d');
+  const overlayCanvas = document.getElementById('overlayCanvas');
+  const overlayCtx = overlayCanvas.getContext('2d');
+  const scoreDisplay = document.getElementById('score');
+  const highScoreDisplay = document.getElementById('highScore');
+  const difficultySelect = document.getElementById('difficultySelect');
+
+  const gridSize = 20;
+  const tileCount = canvas.width / gridSize;
+  let snake = [{ x: 10, y: 10 }];
+  let direction = { x: 0, y: 0 };
+  let food = { x: 15, y: 15 };
+  let snakeColor = '#4CAF50'; // Guacamole color
+  let score = 0;
+  let highScore = 0;
+  let gameSpeed = 200;
+  let isPaused = false;
+
+  difficultySelect.addEventListener('change', (e) => {
+    switch (e.target.value) {
+      case 'easy':
+        gameSpeed = 200;
+        break;
+      case 'medium':
+        gameSpeed = 100;
+        break;
+      case 'hard':
+        gameSpeed = 50;
+        break;
+    }
+  });
+
+  function gameLoop() {
+    if (!isPaused) {
+      update();
+      draw();
+    }
+    setTimeout(gameLoop, gameSpeed);
+  }
+
+  function update() {
+    const head = { x: snake[0].x + direction.x, y: snake[0].y + direction.y };
+
+    if (head.x === food.x && head.y === food.y) {
+      snake.push({});
+      food = { x: Math.floor(Math.random() * tileCount), y: Math.floor(Math.random() * tileCount) };
+      score++;
+      scoreDisplay.textContent = `Score: ${score}`;
+      if (score > highScore) {
+        highScore = score;
+        highScoreDisplay.textContent = `High Score: ${highScore}`;
+      }
+    }
+
+    for (let i = snake.length - 1; i > 0; i--) {
+      snake[i] = { ...snake[i - 1] };
+    }
+
+    snake[0] = head;
+
+    if (head.x < 0 || head.x >= tileCount || head.y < 0 || head.y >= tileCount || snake.slice(1).some(segment => segment.x === head.x && segment.y === head.y)) {
+      snake = [{ x: 10, y: 10 }];
+      direction = { x: 0, y: 0 };
+      food = { x: 15, y: 15 };
+      score = 0;
+      scoreDisplay.textContent = `Score: ${score}`;
+    }
+  }
+
+  function draw() {
+    ctx.fillStyle = '#A1B2D4'; // Plain color for the gaming area
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    ctx.fillStyle = snakeColor;
+    snake.forEach(segment => {
+      ctx.fillRect(segment.x * gridSize, segment.y * gridSize, gridSize - 2, gridSize - 2);
+    });
+
+    ctx.fillStyle = '#FFD700';
+    ctx.fillRect(food.x * gridSize, food.y * gridSize, gridSize - 2, gridSize - 2);
+
+    drawGlassCrackEffect();
+  }
+
+  function drawGlassCrackEffect() {
+    overlayCtx.clearRect(0, 0, overlayCanvas.width, overlayCanvas.height);
+    overlayCtx.strokeStyle = 'rgba(255, 255, 255, 0.5)';
+    overlayCtx.lineWidth = 2;
+
+    for (let i = 0; i < 10; i++) {
+      overlayCtx.beginPath();
+      let startX = Math.random() * overlayCanvas.width;
+      let startY = Math.random() * overlayCanvas.height;
+      overlayCtx.moveTo(startX, startY);
+      for (let j = 0; j < 5; j++) {
+        let endX = startX + (Math.random() - 0.5) * 50;
+        let endY = startY + (Math.random() - 0.5) * 50;
+        overlayCtx.lineTo(endX, endY);
+        startX = endX;
+        startY = endY;
+      }
+      overlayCtx.stroke();
+    }
+  }
+
+  document.addEventListener('keydown', e => {
+    switch (e.key) {
+      case 'ArrowUp':
+        if (direction.y === 0) direction = { x: 0, y: -1 };
+        break;
+      case 'ArrowDown':
+        if (direction.y === 0) direction = { x: 0, y: 1 };
+        break;
+      case 'ArrowLeft':
+        if (direction.x === 0) direction = { x: -1, y: 0 };
+        break;
+      case 'ArrowRight':
+        if (direction.x === 0) direction = { x: 1, y: 0 };
+        break;
+      case ' ':
+        isPaused = !isPaused;
+        break;
+    }
+  });
+
+  gameLoop();
+</script>
+</body>
+</html>
