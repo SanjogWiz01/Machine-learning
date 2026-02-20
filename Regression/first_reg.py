@@ -58,4 +58,4 @@ plt.plot(X, model.predict(X))
 plt.title("Hours Studied vs Marks (Linear Regression)")
 plt.xlabel("Hours Studied")
 plt.ylabel("Marks")
-plt.show()
+plt.show() # printing the patttern
